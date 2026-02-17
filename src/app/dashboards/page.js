@@ -1,21 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-const STORAGE_KEY = "dandi.apiKeys.v1";
-
-function safeParse(json, fallback) {
-  try {
-    const v = JSON.parse(json);
-    return v ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
+const TABLE = "api_keys";
 
 function randomKey() {
-  // Simple browser-safe token (not cryptographic).
   const a = Math.random().toString(16).slice(2);
   const b = Math.random().toString(16).slice(2);
   const c = Date.now().toString(16);
@@ -30,23 +21,48 @@ function formatDate(iso) {
   }
 }
 
+function rowToItem(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    key: row.key ?? "",
+    prefix: row.prefix ?? "",
+    createdAt: row.created_at ?? "",
+    updatedAt: row.updated_at ?? "",
+  };
+}
+
 export default function DashboardsPage() {
-  const [items, setItems] = useState(() => {
-    if (typeof window === "undefined") return [];
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = safeParse(raw, []);
-    return Array.isArray(parsed) ? parsed : [];
-  });
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState("");
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const copyTimerRef = useRef(null);
 
+  const fetchKeys = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error: fetchError } = await supabase
+      .from(TABLE)
+      .select("id, name, key, prefix, created_at, updated_at")
+      .order("created_at", { ascending: false });
+    setLoading(false);
+    if (fetchError) {
+      setError(fetchError.message);
+      setItems([]);
+      return;
+    }
+    setItems((data ?? []).map(rowToItem));
+  }, []);
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    fetchKeys();
+  }, [fetchKeys]);
 
   useEffect(() => {
     return () => {
@@ -65,33 +81,34 @@ export default function DashboardsPage() {
     });
   }, [items, query]);
 
-  function createKey(e) {
+  async function createKey(e) {
     e.preventDefault();
+    setActionError(null);
     const trimmed = name.trim();
     if (!trimmed) return;
 
     const key = randomKey();
     const now = new Date().toISOString();
-    const id =
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${now}-${Math.random().toString(16).slice(2)}`;
-
-    const next = {
-      id,
+    const row = {
       name: trimmed,
       key,
       prefix: key.slice(0, 12),
-      createdAt: now,
-      updatedAt: now,
+      created_at: now,
+      updated_at: now,
     };
-    setItems((prev) => [next, ...prev]);
+    const { data, error: insertError } = await supabase.from(TABLE).insert(row).select("id, name, key, prefix, created_at, updated_at").single();
+    if (insertError) {
+      setActionError(insertError.message);
+      return;
+    }
+    setItems((prev) => [rowToItem(data), ...prev]);
     setName("");
   }
 
   function startEdit(item) {
     setEditingId(item.id);
     setEditingName(item.name || "");
+    setActionError(null);
   }
 
   function cancelEdit() {
@@ -99,28 +116,51 @@ export default function DashboardsPage() {
     setEditingName("");
   }
 
-  function saveEdit(id) {
+  async function saveEdit(id) {
+    setActionError(null);
     const trimmed = editingName.trim();
     if (!trimmed) return;
     const now = new Date().toISOString();
+    const { error: updateError } = await supabase
+      .from(TABLE)
+      .update({ name: trimmed, updated_at: now })
+      .eq("id", id);
+    if (updateError) {
+      setActionError(updateError.message);
+      return;
+    }
     setItems((prev) =>
       prev.map((x) => (x.id === id ? { ...x, name: trimmed, updatedAt: now } : x))
     );
     cancelEdit();
   }
 
-  function regenerate(id) {
+  async function regenerate(id) {
+    setActionError(null);
+    const key = randomKey();
     const now = new Date().toISOString();
+    const { error: updateError } = await supabase
+      .from(TABLE)
+      .update({ key, prefix: key.slice(0, 12), updated_at: now })
+      .eq("id", id);
+    if (updateError) {
+      setActionError(updateError.message);
+      return;
+    }
     setItems((prev) =>
-      prev.map((x) => {
-        if (x.id !== id) return x;
-        const key = randomKey();
-        return { ...x, key, prefix: key.slice(0, 12), updatedAt: now };
-      })
+      prev.map((x) =>
+        x.id === id ? { ...x, key, prefix: key.slice(0, 12), updatedAt: now } : x
+      )
     );
   }
 
-  function remove(id) {
+  async function remove(id) {
+    setActionError(null);
+    const { error: deleteError } = await supabase.from(TABLE).delete().eq("id", id);
+    if (deleteError) {
+      setActionError(deleteError.message);
+      return;
+    }
     setItems((prev) => prev.filter((x) => x.id !== id));
     if (editingId === id) cancelEdit();
   }
@@ -143,8 +183,8 @@ export default function DashboardsPage() {
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-semibold tracking-tight">API Key Dashboard</h1>
             <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
-              Create, rename, rotate, copy, and delete API keys. Keys are stored locally
-              in your browser (no server yet).
+              Create, rename, rotate, copy, and delete API keys. Keys are stored in
+              Supabase and synced across sessions.
             </p>
           </div>
           <div className="flex gap-3">
@@ -156,6 +196,12 @@ export default function DashboardsPage() {
             </Link>
           </div>
         </div>
+
+        {(error || actionError) && (
+          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+            {error ?? actionError}
+          </div>
+        )}
 
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <section className="rounded-2xl border border-black/[.08] bg-white p-5 shadow-sm dark:border-white/[.12] dark:bg-zinc-950">
@@ -200,7 +246,11 @@ export default function DashboardsPage() {
             </div>
 
             <div className="mt-4 flex flex-col gap-3">
-              {filtered.length === 0 ? (
+              {loading ? (
+                <div className="rounded-xl border border-dashed border-black/[.10] p-4 text-sm text-zinc-600 dark:border-white/[.14] dark:text-zinc-400">
+                  Loading keys…
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-black/[.10] p-4 text-sm text-zinc-600 dark:border-white/[.14] dark:text-zinc-400">
                   No keys yet. Create your first one on the left.
                 </div>

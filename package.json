@@ -9,10 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@langchain/core": "^1.1.27",
+    "@langchain/openai": "^1.2.9",
     "@supabase/supabase-js": "^2.96.0",
+    "langchain": "^1.2.26",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

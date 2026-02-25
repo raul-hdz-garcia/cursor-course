@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getServerSupabase } from "@/lib/supabase";
 
 const TABLE = "api_keys";
 
@@ -15,6 +15,7 @@ export async function POST(request) {
       );
     }
 
+    const supabase = getServerSupabase();
     const { data, error } = await supabase
       .from(TABLE)
       .select("id")
@@ -22,8 +23,16 @@ export async function POST(request) {
       .maybeSingle();
 
     if (error) {
+      const isDev = process.env.NODE_ENV === "development";
+      const detail = isDev
+        ? { message: error.message, ...(error.cause && { cause: String(error.cause) }) }
+        : undefined;
       return NextResponse.json(
-        { valid: false, error: "Invalid API key" },
+        {
+          valid: false,
+          error: "Invalid API key",
+          ...(detail && { detail }),
+        },
         { status: 401 }
       );
     }
@@ -39,9 +48,14 @@ export async function POST(request) {
       { valid: false, error: "Invalid API key" },
       { status: 401 }
     );
-  } catch {
+  } catch (err) {
+    const isDev = process.env.NODE_ENV === "development";
     return NextResponse.json(
-      { valid: false, error: "Invalid request body" },
+      {
+        valid: false,
+        error: "Invalid request body",
+        ...(isDev && err instanceof Error && { detail: err.message }),
+      },
       { status: 400 }
     );
   }

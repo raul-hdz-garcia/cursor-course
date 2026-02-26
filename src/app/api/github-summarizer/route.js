@@ -4,12 +4,42 @@ import { summarizeGithubReadme } from "@/lib/chain";
 
 const TABLE = "api_keys";
 
+/** CORS headers so browser-based clients (e.g. Postman Web) can call this API */
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, x-api-key",
+  "Access-Control-Max-Age": "86400",
+};
+
+function jsonWithCors(data, init = {}) {
+  return NextResponse.json(data, {
+    ...init,
+    headers: { ...corsHeaders, ...init.headers },
+  });
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 export async function POST(request) {
+  let body;
+  try {
+    const text = await request.text();
+    body = text ? JSON.parse(text) : {};
+  } catch {
+    return jsonWithCors(
+      { valid: false, error: "Invalid request body: must be valid JSON" },
+      { status: 400 }
+    );
+  }
+
   try {
     const apiKey = request.headers.get("x-api-key")?.trim() ?? "";
 
     if (!apiKey) {
-      return NextResponse.json(
+      return jsonWithCors(
         { valid: false, error: "Missing or empty x-api-key header" },
         { status: 400 }
       );
@@ -27,7 +57,7 @@ export async function POST(request) {
       const detail = isDev
         ? { message: error.message, ...(error.cause && { cause: String(error.cause) }) }
         : undefined;
-      return NextResponse.json(
+      return jsonWithCors(
         {
           valid: false,
           error: "Invalid API key",
@@ -38,16 +68,15 @@ export async function POST(request) {
     }
 
     if (!data) {
-      return NextResponse.json(
+      return jsonWithCors(
         { valid: false, error: "Invalid API key" },
         { status: 401 }
       );
     }
 
-    const body = await request.json().catch(() => ({}));
     const githubUrl = body?.githubUrl?.trim();
     if (!githubUrl) {
-      return NextResponse.json(
+      return jsonWithCors(
         { valid: false, error: "Missing githubUrl in request body" },
         { status: 400 }
       );
@@ -55,16 +84,17 @@ export async function POST(request) {
 
     const readmeContent = await fetchGithubReadme(githubUrl);
     const result = await summarizeGithubReadme(readmeContent);
-    return NextResponse.json({ valid: true, ...result });
+    return jsonWithCors({ valid: true, ...result });
   } catch (err) {
     const isDev = process.env.NODE_ENV === "development";
-    return NextResponse.json(
+    const message = err instanceof Error ? err.message : "Request failed";
+    return jsonWithCors(
       {
         valid: false,
-        error: "Invalid request body",
-        ...(isDev && err instanceof Error && { detail: err.message }),
+        error: isDev ? message : "Request failed",
+        ...(isDev && err instanceof Error && { detail: String(err) }),
       },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }

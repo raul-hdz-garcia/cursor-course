@@ -4,7 +4,8 @@ const features = [
   {
     icon: FileText,
     title: "Repository Summaries",
-    description: "Get AI-powered summaries of any repository&apos;s purpose, architecture, and key features in seconds.",
+    description:
+      "Get AI-powered summaries of any repository's purpose, architecture, and key features in seconds.",
   },
   {
     icon: Star,

@@ -9,8 +9,8 @@ export default function SignInGate() {
   const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-6 px-6 py-16">
-      <div className="w-full max-w-md rounded-2xl border border-black/[.08] bg-white p-8 text-center shadow-sm dark:border-white/[.12] dark:bg-zinc-950">
+    <div className="flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-6 px-4 py-10 sm:px-6 sm:py-16">
+      <div className="w-full min-w-0 max-w-md rounded-2xl border border-black/[.08] bg-white p-5 text-center shadow-sm sm:p-8 dark:border-white/[.12] dark:bg-zinc-950">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
           Sign in to continue
         </h1>

@@ -26,12 +26,12 @@ export function HeroSection() {
             on open source projects. Make informed decisions faster.
           </p>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap">
-            <Button size="lg" className="gap-2 rounded-xl px-5 font-semibold">
+          <div className="mt-10 flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:mx-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <Button size="lg" className="h-12 w-full min-h-12 gap-2 rounded-xl px-5 font-semibold sm:w-auto sm:min-h-0">
               <Terminal className="h-4 w-4 opacity-90" />
               Get Started Free
             </Button>
-            <Button size="lg" variant="outline" className="gap-2 rounded-xl px-5 font-semibold">
+            <Button size="lg" variant="outline" className="h-12 w-full min-h-12 gap-2 rounded-xl px-5 font-semibold sm:w-auto sm:min-h-0">
               <BookOpen className="h-4 w-4 opacity-80" />
               View Demo
             </Button>

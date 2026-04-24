@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function ProtectedPage() {
   return (
-    <div className="p-6 md:p-10">
+    <div className="min-h-0 w-full min-w-0 flex-1 p-4 sm:p-6 md:p-10">
       <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
         Protected
       </h1>

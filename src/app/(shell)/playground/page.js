@@ -49,7 +49,7 @@ export default function PlaygroundPage() {
   }
 
   return (
-    <div className="p-6 md:p-10">
+    <div className="min-h-0 w-full min-w-0 flex-1 p-4 sm:p-6 md:p-10">
       <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
         API Playground
       </h1>
@@ -57,7 +57,7 @@ export default function PlaygroundPage() {
         Enter your API key to validate and access the protected area.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 max-w-md">
+      <form onSubmit={handleSubmit} className="mt-8 w-full max-w-md min-w-0">
         <label htmlFor="api-key" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           API Key
         </label>
@@ -83,7 +83,7 @@ export default function PlaygroundPage() {
       {toast && (
         <div
           role="alert"
-          className={`fixed bottom-6 right-6 z-50 max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg ${
+          className={`fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm rounded-lg px-4 py-3 text-center text-sm font-medium shadow-lg [padding-bottom:max(1rem,env(safe-area-inset-bottom))] [padding-left:max(1rem,env(safe-area-inset-left))] [padding-right:max(1rem,env(safe-area-inset-right))] sm:bottom-6 sm:left-auto sm:right-6 sm:mx-0 ${
             toast.type === "success"
               ? "bg-emerald-600 text-white dark:bg-emerald-500"
               : "bg-red-600 text-white dark:bg-red-500"

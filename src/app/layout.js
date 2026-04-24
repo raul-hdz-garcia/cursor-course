@@ -22,6 +22,12 @@ export const metadata = {
     "AI-powered summaries, star trends, and analytics for open source GitHub repositories.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

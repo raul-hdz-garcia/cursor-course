@@ -4,7 +4,7 @@ import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 
-export default function HomeAuthActions() {
+export default function HomeAuthActions({ mobileStack = false }) {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
@@ -20,9 +20,15 @@ export default function HomeAuthActions() {
     const photo = session.user?.image;
 
     return (
-      <div className="flex items-center gap-2">
+      <div
+        className={
+          mobileStack
+            ? "flex w-full min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+            : "flex min-w-0 items-center gap-2"
+        }
+      >
         <div
-          className="flex h-10 items-center justify-center gap-3 px-2 sm:justify-start"
+          className={`flex min-w-0 items-center justify-center gap-3 px-2 sm:justify-start ${mobileStack ? "w-full justify-start" : ""}`}
           title={session.user?.email ?? label}
         >
           {photo ? (
@@ -41,14 +47,16 @@ export default function HomeAuthActions() {
               {(label.trim().charAt(0) || "?").toUpperCase()}
             </span>
           )}
-          <span className="truncate text-sm text-zinc-600 dark:text-zinc-400 sm:max-w-[200px]">
+          <span
+            className={`min-w-0 shrink truncate text-sm text-zinc-600 dark:text-zinc-400 ${mobileStack ? "text-left" : "sm:max-w-[200px]"}`}
+          >
             {label}
           </span>
         </div>
         <button
           type="button"
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="flex h-10 items-center justify-center rounded-full border border-solid border-black/[.08] px-4 text-sm transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
+          className={`flex h-10 shrink-0 items-center justify-center rounded-full border border-solid border-black/[.08] px-4 text-sm transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] ${mobileStack ? "w-full sm:w-auto" : ""}`}
         >
           Sign out
         </button>
@@ -56,5 +64,16 @@ export default function HomeAuthActions() {
     );
   }
 
-  return <GoogleSignInButton callbackUrl="/" />;
+  return (
+    <div className={mobileStack ? "w-full" : ""}>
+      <GoogleSignInButton
+        callbackUrl="/"
+        className={
+          mobileStack
+            ? "flex h-12 w-full items-center justify-center gap-2 rounded-full border border-solid border-black/[.08] px-5 text-sm font-medium transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
+            : undefined
+        }
+      />
+    </div>
+  );
 }

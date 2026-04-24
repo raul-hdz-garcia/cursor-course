@@ -69,7 +69,7 @@ export function PricingSection() {
             <div
               key={plan.name}
               className={cn(
-                "relative flex flex-col rounded-xl border p-8",
+                "relative flex flex-col rounded-xl border p-6 sm:p-8",
                 plan.popular
                   ? "border-2 border-primary bg-card shadow-md shadow-foreground/5"
                   : "border-border bg-card"

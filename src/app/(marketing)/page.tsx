@@ -9,9 +9,9 @@ import "./og-marketing-scope.css"
 
 export default function Home() {
   return (
-    <div className="og-marketing min-h-screen bg-background font-sans text-foreground">
+    <div className="og-marketing min-h-dvh w-full max-w-[100vw] overflow-x-clip bg-background font-sans text-foreground">
       <Header />
-      <main>
+      <main className="w-full min-w-0">
         <HeroSection />
         <FeaturesSection />
         <PricingSection />

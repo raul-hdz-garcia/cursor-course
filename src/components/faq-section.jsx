@@ -11,7 +11,7 @@ const faqs = [
   {
     question: "How does Dandi GitHub Analyzer work?",
     answer:
-      "Dandi connects to GitHub&apos;s API to fetch repository data, then uses AI to analyze and summarize the information. You simply enter a repository URL, and we handle the rest.",
+      "Dandi connects to GitHub's API to fetch repository data, then uses AI to analyze and summarize the information. You simply enter a repository URL, and we handle the rest.",
   },
   {
     question: "Is my data secure?",
@@ -21,10 +21,10 @@ const faqs = [
   {
     question: "Can I analyze private repositories?",
     answer:
-      "Yes, with the Pro and Team plans. You&apos;ll need to authorize our app with your GitHub account to access private repositories.",
+      "Yes, with the Pro and Team plans. You'll need to authorize our app with your GitHub account to access private repositories.",
   },
   {
-    question: "What&apos;s included in the free plan?",
+    question: "What's included in the free plan?",
     answer:
       "The free plan includes 5 repository analyses per month, basic summaries, star count tracking, and access to our community support channels.",
   },
@@ -44,17 +44,17 @@ export function FaqSection() {
             Frequently asked questions
           </h2>
           <p className="mt-4 text-pretty text-lg text-muted-foreground">
-            Got questions? We&apos;ve got answers.
+            Got questions? We've got answers.
           </p>
         </div>
 
         <Accordion type="single" collapsible className="mt-12">
           {faqs.map((faq, index) => (
             <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-left text-foreground hover:text-foreground">
+              <AccordionTrigger className="break-words pr-2 text-left text-foreground hover:text-foreground">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
+              <AccordionContent className="break-words text-pretty text-muted-foreground">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>

@@ -3,7 +3,7 @@ import SignInGate from "./SignInGate";
 
 function SignInFallback() {
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-6 py-16 text-sm text-zinc-500 dark:text-zinc-400">
+    <div className="flex min-h-0 w-full flex-1 items-center justify-center px-4 py-10 text-sm text-zinc-500 sm:px-6 sm:py-16 dark:text-zinc-400">
       Loading…
     </div>
   );
@@ -11,8 +11,10 @@ function SignInFallback() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<SignInFallback />}>
-      <SignInGate />
-    </Suspense>
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      <Suspense fallback={<SignInFallback />}>
+        <SignInGate />
+      </Suspense>
+    </div>
   );
 }

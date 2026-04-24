@@ -177,20 +177,20 @@ export default function DashboardsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <main className="mx-auto w-full max-w-5xl px-6 py-12">
+    <div className="min-h-0 w-full flex-1 bg-zinc-50 font-sans text-zinc-950 dark:bg-black dark:text-zinc-50">
+      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 py-8 sm:px-6 sm:py-10 md:py-12">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-semibold tracking-tight">API Key Dashboard</h1>
+          <div className="min-w-0 flex-1 flex flex-col gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">API Key Dashboard</h1>
             <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
               Create, rename, rotate, copy, and delete API keys. Keys are stored in
               Supabase and synced across sessions.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="shrink-0 self-start sm:self-auto">
             <Link
               href="/"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-white px-4 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+              className="inline-flex h-10 min-h-10 w-full items-center justify-center rounded-full border border-white/10 bg-white px-4 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 sm:w-auto dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
             >
               Back home
             </Link>
@@ -295,7 +295,7 @@ export default function DashboardsPage() {
                           </>
                         )}
 
-                        <div className="mt-3 rounded-lg bg-zinc-50 px-3 py-2 font-mono text-xs text-zinc-700 dark:bg-black dark:text-zinc-300">
+                        <div className="mt-3 break-all rounded-lg bg-zinc-50 px-3 py-2 font-mono text-xs text-zinc-700 [overflow-wrap:anywhere] dark:bg-black dark:text-zinc-300">
                           {item.key}
                         </div>
                         <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">

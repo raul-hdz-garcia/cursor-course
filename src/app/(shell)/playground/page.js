@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-
-const TABLE = "api_keys";
 
 export default function PlaygroundPage() {
   const [apiKey, setApiKey] = useState("");
@@ -26,26 +23,28 @@ export default function PlaygroundPage() {
     setLoading(true);
     setToast(null);
 
-    const { data, error } = await supabase
-      .from(TABLE)
-      .select("id")
-      .eq("key", trimmed)
-      .maybeSingle();
+    const res = await fetch("/api/validate-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apiKey: trimmed }),
+    });
+
+    let body;
+    try {
+      body = await res.json();
+    } catch {
+      body = {};
+    }
 
     setLoading(false);
 
-    if (error) {
-      showToast("error", "Invalid API key");
-      return;
-    }
-
-    if (data) {
+    if (res.ok && body?.valid) {
       showToast("success", "Valid api key, /protected can be accessed");
       setTimeout(() => router.push("/protected"), 800);
       return;
     }
 
-    showToast("error", "Invalid API key");
+    showToast("error", typeof body.error === "string" ? body.error : "Invalid API key");
   }
 
   return (

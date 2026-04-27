@@ -2,16 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
 
-const TABLE = "api_keys";
-
-function randomKey() {
-  const a = Math.random().toString(16).slice(2);
-  const b = Math.random().toString(16).slice(2);
-  const c = Date.now().toString(16);
-  return `dandi_${c}_${a}${b}`.slice(0, 48);
-}
+const API_BASE = "/api/api-keys";
 
 function formatDate(iso) {
   try {
@@ -27,9 +19,20 @@ function rowToItem(row) {
     name: row.name ?? "",
     key: row.key ?? "",
     prefix: row.prefix ?? "",
-    createdAt: row.created_at ?? "",
-    updatedAt: row.updated_at ?? "",
+    createdAt: row.createdAt ?? row.created_at ?? "",
+    updatedAt: row.updatedAt ?? row.updated_at ?? "",
   };
+}
+
+async function readErrorMessage(res) {
+  try {
+    const j = await res.json();
+    if (typeof j.error === "string") return j.error;
+    if (typeof j.message === "string") return j.message;
+  } catch {
+    // ignore
+  }
+  return res.statusText || "Request failed";
 }
 
 export default function DashboardsPage() {
@@ -47,17 +50,15 @@ export default function DashboardsPage() {
   const fetchKeys = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await supabase
-      .from(TABLE)
-      .select("id, name, key, prefix, created_at, updated_at")
-      .order("created_at", { ascending: false });
+    const res = await fetch(API_BASE, { credentials: "include" });
     setLoading(false);
-    if (fetchError) {
-      setError(fetchError.message);
+    if (!res.ok) {
+      setError(await readErrorMessage(res));
       setItems([]);
       return;
     }
-    setItems((data ?? []).map(rowToItem));
+    const json = await res.json();
+    setItems((json.data ?? []).map(rowToItem));
   }, []);
 
   useEffect(() => {
@@ -87,21 +88,18 @@ export default function DashboardsPage() {
     const trimmed = name.trim();
     if (!trimmed) return;
 
-    const key = randomKey();
-    const now = new Date().toISOString();
-    const row = {
-      name: trimmed,
-      key,
-      prefix: key.slice(0, 12),
-      created_at: now,
-      updated_at: now,
-    };
-    const { data, error: insertError } = await supabase.from(TABLE).insert(row).select("id, name, key, prefix, created_at, updated_at").single();
-    if (insertError) {
-      setActionError(insertError.message);
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: trimmed }),
+    });
+    if (!res.ok) {
+      setActionError(await readErrorMessage(res));
       return;
     }
-    setItems((prev) => [rowToItem(data), ...prev]);
+    const json = await res.json();
+    setItems((prev) => [rowToItem(json.data), ...prev]);
     setName("");
   }
 
@@ -120,45 +118,44 @@ export default function DashboardsPage() {
     setActionError(null);
     const trimmed = editingName.trim();
     if (!trimmed) return;
-    const now = new Date().toISOString();
-    const { error: updateError } = await supabase
-      .from(TABLE)
-      .update({ name: trimmed, updated_at: now })
-      .eq("id", id);
-    if (updateError) {
-      setActionError(updateError.message);
+    const res = await fetch(`${API_BASE}/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: trimmed }),
+    });
+    if (!res.ok) {
+      setActionError(await readErrorMessage(res));
       return;
     }
-    setItems((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, name: trimmed, updatedAt: now } : x))
-    );
+    const json = await res.json();
+    const u = rowToItem(json.data);
+    setItems((prev) => prev.map((x) => (x.id === id ? u : x)));
     cancelEdit();
   }
 
   async function regenerate(id) {
     setActionError(null);
-    const key = randomKey();
-    const now = new Date().toISOString();
-    const { error: updateError } = await supabase
-      .from(TABLE)
-      .update({ key, prefix: key.slice(0, 12), updated_at: now })
-      .eq("id", id);
-    if (updateError) {
-      setActionError(updateError.message);
+    const res = await fetch(`${API_BASE}/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rotate: true }),
+    });
+    if (!res.ok) {
+      setActionError(await readErrorMessage(res));
       return;
     }
-    setItems((prev) =>
-      prev.map((x) =>
-        x.id === id ? { ...x, key, prefix: key.slice(0, 12), updatedAt: now } : x
-      )
-    );
+    const json = await res.json();
+    const u = rowToItem(json.data);
+    setItems((prev) => prev.map((x) => (x.id === id ? u : x)));
   }
 
   async function remove(id) {
     setActionError(null);
-    const { error: deleteError } = await supabase.from(TABLE).delete().eq("id", id);
-    if (deleteError) {
-      setActionError(deleteError.message);
+    const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE", credentials: "include" });
+    if (!res.ok) {
+      setActionError(await readErrorMessage(res));
       return;
     }
     setItems((prev) => prev.filter((x) => x.id !== id));

@@ -9,7 +9,7 @@ export async function GET() {
   const { supabase, userId } = ctx;
   const { data, error } = await supabase
     .from(API_KEYS_TABLE)
-    .select("id, name, key, prefix, created_at, updated_at")
+    .select("id, name, key, prefix, created_at, updated_at, usage, usage_limit")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -48,7 +48,7 @@ export async function POST(request) {
       created_at: now,
       updated_at: now,
     })
-    .select("id, name, key, prefix, created_at, updated_at")
+    .select("id, name, key, prefix, created_at, updated_at, usage, usage_limit")
     .single();
 
   if (error) {

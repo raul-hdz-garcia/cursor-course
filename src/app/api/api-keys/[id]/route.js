@@ -17,7 +17,7 @@ export async function GET(_request, segmentContext) {
 
   const { data, error } = await supabase
     .from(API_KEYS_TABLE)
-    .select("id, name, key, prefix, created_at, updated_at")
+    .select("id, name, key, prefix, created_at, updated_at, usage, usage_limit")
     .eq("id", id)
     .eq("user_id", userId)
     .maybeSingle();
@@ -70,7 +70,7 @@ export async function PATCH(request, segmentContext) {
     .update(updates)
     .eq("id", id)
     .eq("user_id", userId)
-    .select("id, name, key, prefix, created_at, updated_at")
+    .select("id, name, key, prefix, created_at, updated_at, usage, usage_limit")
     .maybeSingle();
 
   if (error) {

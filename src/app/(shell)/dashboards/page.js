@@ -14,6 +14,8 @@ function formatDate(iso) {
 }
 
 function rowToItem(row) {
+  const usage = Number(row.usage ?? 0);
+  const usageLimit = Number(row.usageLimit ?? row.usage_limit ?? 0);
   return {
     id: row.id,
     name: row.name ?? "",
@@ -21,7 +23,14 @@ function rowToItem(row) {
     prefix: row.prefix ?? "",
     createdAt: row.createdAt ?? row.created_at ?? "",
     updatedAt: row.updatedAt ?? row.updated_at ?? "",
+    usage: Number.isFinite(usage) ? usage : 0,
+    usageLimit: Number.isFinite(usageLimit) ? usageLimit : 0,
   };
+}
+
+function usageRemaining(used, limit) {
+  if (!Number.isFinite(used) || !Number.isFinite(limit)) return 0;
+  return Math.max(0, limit - used);
 }
 
 async function readErrorMessage(res) {
@@ -291,6 +300,24 @@ export default function DashboardsPage() {
                             </div>
                           </>
                         )}
+
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                          <span>
+                            Used{" "}
+                            <span className="font-medium tabular-nums text-zinc-900 dark:text-zinc-200">
+                              {item.usage}
+                            </span>
+                          </span>
+                          <span>
+                            Left{" "}
+                            <span className="font-medium tabular-nums text-zinc-900 dark:text-zinc-200">
+                              {usageRemaining(item.usage, item.usageLimit)}
+                            </span>
+                          </span>
+                          <span className="text-zinc-500 dark:text-zinc-500">
+                            of <span className="tabular-nums">{item.usageLimit}</span> limit
+                          </span>
+                        </div>
 
                         <div className="mt-3 break-all rounded-lg bg-zinc-50 px-3 py-2 font-mono text-xs text-zinc-700 [overflow-wrap:anywhere] dark:bg-black dark:text-zinc-300">
                           {item.key}

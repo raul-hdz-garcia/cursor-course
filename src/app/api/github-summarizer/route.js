@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase";
+import { consumeApiKeyQuota, verifyApiKeyExists } from "@/lib/api-key-quota";
 import { summarizeGithubReadme } from "@/lib/chain";
 import { fetchGithubReadme } from "@/lib/github-readme";
-
-const TABLE = "api_keys";
 
 /** CORS headers so browser-based clients (e.g. Postman Web) can call this API */
 const corsHeaders = {
@@ -47,28 +46,21 @@ export async function POST(request) {
     }
 
     const supabase = getServerSupabase();
-    const { data, error } = await supabase
-      .from(TABLE)
-      .select("id")
-      .eq("key", apiKey)
-      .maybeSingle();
+    const keyCheck = await verifyApiKeyExists(supabase, apiKey);
 
-    if (error) {
+    if (!keyCheck.ok && keyCheck.reason === "db_error") {
       const isDev = process.env.NODE_ENV === "development";
-      const detail = isDev
-        ? { message: error.message, ...(error.cause && { cause: String(error.cause) }) }
-        : undefined;
       return jsonWithCors(
         {
           valid: false,
-          error: "Invalid API key",
-          ...(detail && { detail }),
+          error: "Failed to validate API key",
+          ...(isDev && { detail: keyCheck.message }),
         },
-        { status: 401 }
+        { status: 500 }
       );
     }
 
-    if (!data) {
+    if (!keyCheck.ok) {
       return jsonWithCors(
         { valid: false, error: "Invalid API key" },
         { status: 401 }
@@ -83,9 +75,47 @@ export async function POST(request) {
       );
     }
 
+    const quota = await consumeApiKeyQuota(supabase, apiKey);
+
+    if (!quota.ok && quota.reason === "rpc_error") {
+      const isDev = process.env.NODE_ENV === "development";
+      return jsonWithCors(
+        {
+          valid: false,
+          error: "Failed to update API key usage",
+          ...(isDev && { detail: quota.message }),
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!quota.ok && quota.reason === "invalid_key") {
+      return jsonWithCors(
+        { valid: false, error: "Invalid API key" },
+        { status: 401 }
+      );
+    }
+
+    if (!quota.ok && quota.reason === "rate_limited") {
+      return jsonWithCors(
+        {
+          valid: false,
+          error: "Rate limit exceeded for this API key",
+        },
+        { status: 429 }
+      );
+    }
+
     const readmeContent = await fetchGithubReadme(githubUrl);
     const result = await summarizeGithubReadme(readmeContent);
-    return jsonWithCors({ valid: true, ...result });
+    return jsonWithCors({
+      valid: true,
+      usageQuota: {
+        usage: quota.usage,
+        usageLimit: quota.usageLimit,
+      },
+      ...result,
+    });
   } catch (err) {
     const isDev = process.env.NODE_ENV === "development";
     const message = err instanceof Error ? err.message : "Request failed";

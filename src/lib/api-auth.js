@@ -47,6 +47,8 @@ export async function requireUserFromSession() {
 }
 
 export function rowToApiKeyItem(row) {
+  const usage = Number(row.usage ?? 0);
+  const usageLimit = Number(row.usage_limit ?? 0);
   return {
     id: row.id,
     name: row.name ?? "",
@@ -54,5 +56,7 @@ export function rowToApiKeyItem(row) {
     prefix: row.prefix ?? "",
     createdAt: row.created_at ?? "",
     updatedAt: row.updated_at ?? "",
+    usage: Number.isFinite(usage) ? usage : 0,
+    usageLimit: Number.isFinite(usageLimit) ? usageLimit : 0,
   };
 }

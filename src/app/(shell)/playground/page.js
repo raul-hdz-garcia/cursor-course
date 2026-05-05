@@ -1,20 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
-const DEFAULT_GITHUB_URL = "https://github.com/raul-hdz-garcia/screenmatch-web-backend";
+const DEFAULT_GITHUB_URL = "https://github.com/langchain-ai/langchain";
 
 export default function PlaygroundPage() {
   const [apiKey, setApiKey] = useState("");
   const [githubUrl, setGithubUrl] = useState(DEFAULT_GITHUB_URL);
-  const [loading, setLoading] = useState(false);
   const [summarizeLoading, setSummarizeLoading] = useState(false);
   const [summarizeResult, setSummarizeResult] = useState(null);
   const [summarizeError, setSummarizeError] = useState(null);
   const [toast, setToast] = useState(null);
-
-  const router = useRouter();
 
   function showToast(type, message) {
     setToast({ type, message });
@@ -74,75 +70,20 @@ export default function PlaygroundPage() {
     }
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const trimmed = apiKey.trim();
-    if (!trimmed) return;
-
-    setLoading(true);
-    setToast(null);
-
-    const res = await fetch("/api/validate-key", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ apiKey: trimmed }),
-    });
-
-    let body;
-    try {
-      body = await res.json();
-    } catch {
-      body = {};
-    }
-
-    setLoading(false);
-
-    if (res.ok && body?.valid) {
-      showToast("success", "Valid api key, /protected can be accessed");
-      setTimeout(() => router.push("/protected"), 800);
-      return;
-    }
-
-    showToast("error", typeof body.error === "string" ? body.error : "Invalid API key");
-  }
-
   return (
     <div className="min-h-0 w-full min-w-0 flex-1 p-4 sm:p-6 md:p-10">
       <h1 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
         API Playground
       </h1>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Enter your API key to validate access, or call{" "}
+        Call{" "}
         <code className="rounded bg-zinc-200 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800">
           POST /api/github-summarizer
         </code>{" "}
-        with a public GitHub repository URL.
+        with your API key and a public GitHub repository URL.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 w-full max-w-md min-w-0">
-        <label htmlFor="api-key" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          API Key
-        </label>
-        <input
-          id="api-key"
-          type="text"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="dandi_..."
-          className="mt-2 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-zinc-950 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500"
-          disabled={loading}
-          autoComplete="off"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-4 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
-          {loading ? "Validating…" : "Validate API Key"}
-        </button>
-      </form>
-
-      <form onSubmit={handleSummarize} className="mt-12 w-full max-w-2xl min-w-0 border-t border-zinc-200 pt-10 dark:border-zinc-700">
+      <form onSubmit={handleSummarize} className="mt-8 w-full max-w-2xl min-w-0">
         <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">GitHub summarizer</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Sends your key as the{" "}
@@ -153,6 +94,20 @@ export default function PlaygroundPage() {
           </code>{" "}
           in the body.
         </p>
+
+        <label htmlFor="api-key" className="mt-6 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          API Key
+        </label>
+        <input
+          id="api-key"
+          type="text"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="dandi_..."
+          className="mt-2 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-zinc-950 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500"
+          disabled={summarizeLoading}
+          autoComplete="off"
+        />
 
         <label htmlFor="github-url" className="mt-6 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           GitHub repository URL
@@ -194,6 +149,46 @@ export default function PlaygroundPage() {
                   <p className="text-zinc-600 dark:text-zinc-400">
                     Usage: {summarizeResult.usageQuota.usage} / {summarizeResult.usageQuota.usageLimit}
                   </p>
+                )}
+                {summarizeResult.repository && typeof summarizeResult.repository === "object" && (
+                  <div className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-600 dark:bg-zinc-900">
+                    <h3 className="font-medium text-zinc-950 dark:text-zinc-50">Repository</h3>
+                    <dl className="mt-2 grid gap-2 text-zinc-700 dark:text-zinc-300 sm:grid-cols-2">
+                      <div>
+                        <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Stars</dt>
+                        <dd>{summarizeResult.repository.stars ?? "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                          Latest version
+                        </dt>
+                        <dd>{summarizeResult.repository.latest_version ?? "—"}</dd>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                          Website
+                        </dt>
+                        <dd className="break-all">
+                          {summarizeResult.repository.website_url ? (
+                            <a
+                              href={summarizeResult.repository.website_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-zinc-950 underline underline-offset-2 hover:text-zinc-600 dark:text-zinc-50 dark:hover:text-zinc-300"
+                            >
+                              {summarizeResult.repository.website_url}
+                            </a>
+                          ) : (
+                            "—"
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">License</dt>
+                        <dd>{summarizeResult.repository.license_type ?? "—"}</dd>
+                      </div>
+                    </dl>
+                  </div>
                 )}
                 <div>
                   <h3 className="font-medium text-zinc-950 dark:text-zinc-50">Summary</h3>

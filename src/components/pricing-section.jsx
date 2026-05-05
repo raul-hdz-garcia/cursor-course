@@ -9,7 +9,7 @@ const plans = [
     price: "$0",
     period: "forever",
     features: [
-      "5 repository analyses per month",
+      "30 repository analyses",
       "Basic summaries",
       "Star count tracking",
       "Community support",

@@ -71,7 +71,7 @@ export default function DashboardsPage() {
   }, []);
 
   useEffect(() => {
-    fetchKeys();
+    void Promise.resolve().then(() => fetchKeys());
   }, [fetchKeys]);
 
   useEffect(() => {

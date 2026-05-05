@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { summarizeGithubReadme } from "@/lib/chain";
 import { fetchGithubReadme } from "@/lib/github-readme";
+import { fetchGithubRepositoryInfo } from "@/lib/github-repo-meta";
 
 /**
  * Public demo: same summary as POST /api/github-summarizer, but no API key (server-only LLM + fetch).
@@ -27,9 +28,12 @@ export async function POST(request) {
       );
     }
 
-    const readmeContent = await fetchGithubReadme(githubUrl);
+    const [readmeContent, repository] = await Promise.all([
+      fetchGithubReadme(githubUrl),
+      fetchGithubRepositoryInfo(githubUrl),
+    ]);
     const result = await summarizeGithubReadme(readmeContent);
-    return NextResponse.json({ valid: true, ...result });
+    return NextResponse.json({ valid: true, repository, ...result });
   } catch (err) {
     const isDev = process.env.NODE_ENV === "development";
     const message = err instanceof Error ? err.message : "Request failed";

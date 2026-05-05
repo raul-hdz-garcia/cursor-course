@@ -44,7 +44,7 @@ export function FaqSection() {
             Frequently asked questions
           </h2>
           <p className="mt-4 text-pretty text-lg text-muted-foreground">
-            Got questions? We've got answers.
+            Got questions? We&apos;ve got answers.
           </p>
         </div>
 

@@ -3,6 +3,7 @@ import { getServerSupabase } from "@/lib/supabase";
 import { consumeApiKeyQuota, verifyApiKeyExists } from "@/lib/api-key-quota";
 import { summarizeGithubReadme } from "@/lib/chain";
 import { fetchGithubReadme } from "@/lib/github-readme";
+import { fetchGithubRepositoryInfo } from "@/lib/github-repo-meta";
 
 /** CORS headers so browser-based clients (e.g. Postman Web) can call this API */
 const corsHeaders = {
@@ -106,7 +107,10 @@ export async function POST(request) {
       );
     }
 
-    const readmeContent = await fetchGithubReadme(githubUrl);
+    const [readmeContent, repository] = await Promise.all([
+      fetchGithubReadme(githubUrl),
+      fetchGithubRepositoryInfo(githubUrl),
+    ]);
     const result = await summarizeGithubReadme(readmeContent);
     return jsonWithCors({
       valid: true,
@@ -114,6 +118,7 @@ export async function POST(request) {
         usage: quota.usage,
         usageLimit: quota.usageLimit,
       },
+      repository,
       ...result,
     });
   } catch (err) {

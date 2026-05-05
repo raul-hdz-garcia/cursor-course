@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -48,6 +50,137 @@ function ItemIcon({ href }) {
   return <KeyIcon />;
 }
 
+function sidebarShowsAccount(pathname) {
+  return (
+    pathname === "/dashboards" ||
+    pathname === "/playground" ||
+    pathname?.startsWith("/dashboards/") ||
+    pathname?.startsWith("/playground/")
+  );
+}
+
+function SidebarAccountFooter({ collapsed }) {
+  const { data: session, status } = useSession();
+  const showSkeleton = status === "loading";
+
+  if (!showSkeleton && !session?.user) return null;
+
+  const wrapClass =
+    "flex shrink-0 flex-col border-t border-black/[.08] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3 dark:border-white/[.12] " +
+    (collapsed ? "items-center gap-2" : "gap-3");
+
+  if (showSkeleton) {
+    return (
+      <div className={wrapClass} aria-hidden>
+        {collapsed ? (
+          <>
+            <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-8 w-8 animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-800" />
+          </>
+        ) : (
+          <>
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-[70%] max-w-[10rem] animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="h-3 w-[90%] max-w-[11rem] animate-pulse rounded bg-zinc-200 dark:bg-zinc-700" />
+              </div>
+            </div>
+            <div className="h-8 w-full animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-800" />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  const name = session.user.name?.trim() ?? "";
+  const email = session.user.email?.trim() ?? "";
+  const photo = session.user.image;
+  const primary = name || email || "Signed in";
+  const secondary = name && email ? email : null;
+  const tooltip = [name, email].filter(Boolean).join(" · ") || primary;
+
+  const photoAlt = `${primary} profile photo`;
+
+  function handleSignOut() {
+    signOut({ callbackUrl: "/" });
+  }
+
+  if (collapsed) {
+    return (
+      <div className={wrapClass}>
+        {photo ? (
+          <span title={tooltip} className="inline-flex shrink-0">
+            <Image
+              src={photo}
+              alt={photoAlt}
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-full object-cover ring-2 ring-black/[.08] dark:ring-white/[.12]"
+            />
+          </span>
+        ) : (
+          <span
+            title={tooltip}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-700 ring-2 ring-black/[.08] dark:bg-zinc-800 dark:text-zinc-200 dark:ring-white/[.12]"
+          >
+            {(primary.trim().charAt(0) || "?").toUpperCase()}
+          </span>
+        )}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          className="border-black/[.08] bg-transparent text-zinc-950 shadow-none hover:bg-black/[.06] hover:text-zinc-950 dark:border-white/[.12] dark:bg-transparent dark:text-zinc-50 dark:hover:bg-white/[.08] dark:hover:text-zinc-50 [&_svg]:text-current"
+          aria-label="Log out"
+          title="Log out"
+          onClick={handleSignOut}
+        >
+          <LogOut className="size-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={wrapClass}>
+      <div className="flex min-w-0 items-center gap-3">
+        {photo ? (
+          <Image
+            src={photo}
+            alt={photoAlt}
+            width={40}
+            height={40}
+            className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-black/[.08] dark:ring-white/[.12]"
+          />
+        ) : (
+          <span
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-sm font-medium text-zinc-700 ring-2 ring-black/[.08] dark:bg-zinc-800 dark:text-zinc-200 dark:ring-white/[.12]"
+            aria-hidden
+          >
+            {(primary.trim().charAt(0) || "?").toUpperCase()}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-zinc-950 dark:text-zinc-50">{primary}</p>
+          {secondary && (
+            <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{secondary}</p>
+          )}
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full border-black/[.08] bg-transparent text-zinc-950 shadow-none hover:bg-black/[.06] hover:text-zinc-950 dark:border-white/[.12] dark:bg-transparent dark:text-zinc-50 dark:hover:bg-white/[.08] dark:hover:text-zinc-50"
+        onClick={handleSignOut}
+      >
+        Log out
+      </Button>
+    </div>
+  );
+}
+
 function NavList({ pathname, collapsed, onNavigate, className }) {
   return (
     <nav className={className}>
@@ -83,6 +216,7 @@ export default function SidebarLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const closeSheet = () => setMobileOpen(false);
+  const showAccount = sidebarShowsAccount(pathname);
 
   return (
     <div className="flex min-h-dvh w-full max-w-[100vw] flex-col overflow-x-clip bg-zinc-50 font-sans text-zinc-950 md:flex-row dark:bg-black dark:text-zinc-50">
@@ -101,7 +235,7 @@ export default function SidebarLayout({ children }) {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="w-[min(20rem,100vw-1rem)] max-w-full gap-0 border-r border-black/[.08] p-0 pt-[env(safe-area-inset-top)] sm:w-80 dark:border-white/[.12]"
+            className="flex h-full max-h-dvh min-h-0 w-[min(20rem,100vw-1rem)] max-w-full flex-col gap-0 border-r border-black/[.08] p-0 pt-[env(safe-area-inset-top)] sm:w-80 dark:border-white/[.12]"
           >
             <div className="border-b border-black/[.08] px-4 py-3 dark:border-white/[.12]">
               <Link
@@ -116,8 +250,9 @@ export default function SidebarLayout({ children }) {
               pathname={pathname}
               collapsed={false}
               onNavigate={closeSheet}
-              className="flex flex-col gap-0.5 p-3"
+              className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-3"
             />
+            {showAccount ? <SidebarAccountFooter collapsed={false} /> : null}
           </SheetContent>
         </Sheet>
         <Link href="/" className="ml-1 min-w-0 flex-1 truncate pr-2 text-sm font-semibold" onClick={closeSheet}>
@@ -126,11 +261,11 @@ export default function SidebarLayout({ children }) {
       </header>
 
       <aside
-        className={`hidden shrink-0 flex-col border-r border-black/[.08] bg-white transition-[width] duration-200 ease-out dark:border-white/[.12] dark:bg-zinc-950 md:flex ${
+        className={`hidden min-h-0 shrink-0 flex-col overflow-hidden border-r border-black/[.08] bg-white transition-[width] duration-200 ease-out dark:border-white/[.12] dark:bg-zinc-950 md:sticky md:top-0 md:flex md:h-dvh md:max-h-dvh md:self-start ${
           open ? "w-56" : "w-14"
         }`}
       >
-        <div className="flex h-14 items-center border-b border-black/[.08] px-3 dark:border-white/[.12]">
+        <div className="flex h-14 shrink-0 items-center border-b border-black/[.08] px-3 dark:border-white/[.12]">
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
@@ -156,8 +291,9 @@ export default function SidebarLayout({ children }) {
         <NavList
           pathname={pathname}
           collapsed={!open}
-          className="flex flex-1 flex-col gap-0.5 p-2"
+          className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain p-2"
         />
+        {showAccount ? <SidebarAccountFooter collapsed={!open} /> : null}
       </aside>
       <div className="flex w-full min-w-0 min-h-0 flex-1 flex-col overflow-x-clip pt-14 md:pt-0">{children}</div>
     </div>

@@ -76,23 +76,15 @@ export default function PlaygroundPage() {
         API Playground
       </h1>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Call{" "}
-        <code className="rounded bg-zinc-200 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800">
-          POST /api/github-summarizer
-        </code>{" "}
-        with your API key and a public GitHub repository URL.
+        Paste a public GitHub repository link, add the API key from your account, then run a summary.
+        The overview and repository details appear below when it finishes.
       </p>
 
       <form onSubmit={handleSummarize} className="mt-8 w-full max-w-2xl min-w-0">
         <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">GitHub summarizer</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Sends your key as the{" "}
-          <code className="rounded bg-zinc-200 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800">x-api-key</code>{" "}
-          header and{" "}
-          <code className="rounded bg-zinc-200 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800">
-            {"{ githubUrl }"}
-          </code>{" "}
-          in the body.
+          Only public repositories are supported. If something looks wrong, check the URL and that your key
+          is active.
         </p>
 
         <label htmlFor="api-key" className="mt-6 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -136,7 +128,7 @@ export default function PlaygroundPage() {
           </div>
           <div className="min-h-[12rem] p-4">
             {summarizeLoading && (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">Fetching README and generating summary…</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">Generating your summary…</p>
             )}
             {summarizeError && !summarizeLoading && (
               <p className="text-sm text-red-600 dark:text-red-400" role="alert">

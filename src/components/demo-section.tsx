@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card"
 import { Play, Loader2 } from "lucide-react"
 
 const DEFAULT_URL = "https://github.com/langchain-ai/langchain"
-const API_ENDPOINT = "/api/github-summarizer/demo"
 
 export function DemoSection() {
   const [githubUrl, setGithubUrl] = useState(DEFAULT_URL)
@@ -33,27 +32,22 @@ export function DemoSection() {
             Try it yourself
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Enter any public GitHub repository URL and see the analysis in action.
+            Continue to the playground, paste a public repository link, add your API key, and run a summary
+            to see the analysis.
           </p>
         </div>
 
         <div className="mx-auto mt-12 max-w-5xl">
           <Card className="gap-0 overflow-hidden p-0">
-            {/* API Client Header */}
-            <div className="flex items-center justify-between border-b border-border bg-secondary/50 px-4 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="shrink-0 rounded bg-accent/20 px-2 py-1 text-xs font-semibold text-accent">
-                  POST
-                </span>
-                <span className="min-w-0 truncate font-mono text-sm text-muted-foreground sm:whitespace-normal sm:break-all">
-                  {API_ENDPOINT}
-                </span>
-              </div>
+            <div className="flex flex-col gap-3 border-b border-border bg-secondary/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="min-w-0 text-sm text-muted-foreground">
+                Pick a repository link to try (you can change it), then open the playground to summarize it.
+              </p>
               <Button
                 onClick={handleSubmit}
                 disabled={status === "loading"}
                 size="sm"
-                className="shrink-0 gap-2"
+                className="shrink-0 gap-2 self-start sm:self-auto"
               >
                 {status === "loading" ? (
                   <>
@@ -63,55 +57,43 @@ export function DemoSection() {
                 ) : (
                   <>
                     <Play className="h-4 w-4" />
-                    Send Request
+                    Continue to playground
                   </>
                 )}
               </Button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2">
-              {/* Request Panel */}
               <div className="border-b border-border lg:border-b-0 lg:border-r">
                 <div className="border-b border-border bg-secondary/30 px-4 py-2">
-                  <span className="text-sm font-medium text-foreground">Request Body</span>
+                  <span className="text-sm font-medium text-foreground">Repository URL</span>
                 </div>
                 <div className="p-4">
-                  <div className="mb-4">
-                    <label className="mb-2 block text-sm text-muted-foreground">
-                      GitHub Repository URL
-                    </label>
-                    <input
-                      type="text"
-                      value={githubUrl}
-                      onChange={(e) => setGithubUrl(e.target.value)}
-                      placeholder="https://github.com/owner/repo"
-                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                    />
-                  </div>
-                  <div className="overflow-hidden rounded-md bg-background p-4 font-mono text-sm">
-                    <pre className="whitespace-pre-wrap break-all text-muted-foreground">
-                      <span className="text-foreground">{"{"}</span>
-                      {"\n"}
-                      {"  "}
-                      <span className="text-accent">{'"githubUrl"'}</span>
-                      <span className="text-foreground">:</span>{" "}
-                      <span className="text-amber-400">{`"${githubUrl}"`}</span>
-                      {"\n"}
-                      <span className="text-foreground">{"}"}</span>
-                    </pre>
-                  </div>
+                  <label className="mb-2 block text-sm text-muted-foreground">
+                    Public GitHub repository URL
+                  </label>
+                  <input
+                    type="text"
+                    value={githubUrl}
+                    onChange={(e) => setGithubUrl(e.target.value)}
+                    placeholder="https://github.com/owner/repo"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    You can copy this link into the playground, or replace it with any public repo you want to
+                    try.
+                  </p>
                 </div>
               </div>
 
-              {/* Response Panel */}
               <div>
                 <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-4 py-2">
-                  <span className="text-sm font-medium text-foreground">Response</span>
+                  <span className="text-sm font-medium text-foreground">What happens next</span>
                 </div>
                 <div className="flex h-80 items-center justify-center overflow-auto p-4">
                   <p className="max-w-sm text-center text-sm text-muted-foreground">
-                    Sign in to run this request in the playground with your API key. If you&apos;re
-                    already signed in, Send Request takes you there directly.
+                    We&apos;ll take you to sign in if needed, then to the playground. There you paste the
+                    repository URL, enter your API key, and choose Summarize repository to see results.
                   </p>
                 </div>
               </div>
@@ -119,12 +101,7 @@ export function DemoSection() {
           </Card>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Works with public repositories. The HTTP API for integrations uses{" "}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
-              POST /api/github-summarizer
-            </code>{" "}
-            with an <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">x-api-key</code>{" "}
-            header.
+            Summaries are available for public repositories only.
           </p>
         </div>
       </div>
